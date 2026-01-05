@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Web Page</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        <aside class="sidebar">
+            <h3>Files</h3>
+            <div id="drop-zone" class="drop-zone">
+                Drop files here or click to upload
+                <input type="file" id="file-input" hidden multiple>
+            </div>
+            <div id="upload-status" class="upload-status">
+                No uploads in progress.
+            </div>
+
+            <div class="system-controls">
+                <h3>System Controls</h3>
+                <label for="temp-slider">Temperature: <span id="temp-val">0.7</span></label>
+                <input type="range" id="temp-slider" min="0" max="1.5" step="0.1" value="0.7">
+                
+                <label for="system-prompt">Agent Role:</label>
+                <textarea id="system-prompt" rows="3">You are an Academic Researcher. Use the provided context to answer the user's question. Cite source filenames.</textarea>
+            </div>
+        </aside>
+
+        <main class="container">
+            <h1 class="name">Terubot</h1>
+
+            <div id="chat" class="chat" style="flex-grow: 1; overflow-y: auto;"></div>
+
+            <form id="chat-form" class="composer">
+                <input id="msg" type="text" placeholder="Type a message…" autocomplete="off" />
+                <button type="submit">Send</button>
+            </form>
+        </main>
+    </div>
+
+    <script src="app.js" type="module" defer></script>  
+    <script type="module">
+        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
+        window.pdfjsLib = pdfjsLib;
+
+        // Simple logic for the Drag and Drop Visuals
+        const dropZone = document.getElementById('drop-zone');
+        const status = document.getElementById('upload-status');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                status.innerText = `Uploading ${files.length} file(s)...`;
+                
+                const dataTransfer = new DataTransfer();
+                for (const file of files) { dataTransfer.items.add(file); }
+                document.getElementById('file-input').files = dataTransfer.files;
+                document.getElementById('file-input').dispatchEvent(new Event('change'));
+            }
+        });
+
+        dropZone.addEventListener('click', () => {
+            document.getElementById('file-input').click();
+        });
+    </script>
+</body>
+</html>

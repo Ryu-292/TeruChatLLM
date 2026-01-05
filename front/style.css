@@ -1,0 +1,254 @@
+@font-face {
+    font-family: "Zen-Dots";
+    src: url("/static/fonts/ZenDots-Regular.ttf") format("truetype");
+}
+
+* { 
+    box-sizing: border-box; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    /* Mesh gradient using your colors */
+    background: radial-gradient(circle at 10% 20%, rgba(17, 17, 60, 1) 0%, rgba(0, 0, 33, 1) 90%);
+    background-attachment: fixed;
+    font-family: "Zen-Dots", sans-serif;
+    color: #FFB915;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Add a subtle glow behind everything like the reference image */
+body::before {
+    content: "";
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255, 185, 21, 0.05) 0%, transparent 70%);
+    z-index: -1;
+}
+
+.main-wrapper {
+    display: flex;
+    width: 95vw;
+    height: 90vh;
+    max-width: 1400px;
+    gap: 20px;
+}
+
+/* SIDEBAR: Modern Minimalist Floating Panel */
+.sidebar {
+    width: 280px;
+    background: rgba(17, 17, 60, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid #FFB915;
+    border-radius: 24px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* MAIN CONTAINER: Centered and Clean */
+.container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.chat { 
+    flex-grow: 1;
+    overflow-y: auto; 
+    padding: 20px;
+    margin-bottom: 20px;
+    mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
+}
+
+/* MESSAGE BUBBLES: Floating and soft */
+.msg { 
+    margin: 16px 0; 
+    padding: 16px 20px; 
+    border-radius: 20px; 
+    max-width: 75%; 
+    font-size: 0.75rem;
+    line-height: 1.6;
+}
+
+.msg.user { 
+    background: #FFB915; 
+    color: #000021;
+    margin-left: auto;
+    box-shadow: 0 8px 20px rgba(255, 185, 21, 0.15);
+}
+
+.msg.bot { 
+    background: rgba(255, 255, 255, 0.03); 
+    border: 1px solid rgba(255, 185, 21, 0.1);
+    color: #FFB915;
+    margin-right: auto;
+}
+
+.composer { 
+    display: flex; 
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 185, 21, 0.2);
+    border-radius: 24px;
+    padding: 12px 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto 20px auto;
+}
+
+#msg { 
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: #FFB915;
+    font-family: "Zen-Dots", sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+/* Floating Action Bar inside Composer */
+.composer-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 185, 21, 0.05);
+}
+
+button { 
+    padding: 8px 16px; 
+    border-radius: 12px; 
+    background: #FFB915; 
+    color: #000021; 
+    border: none;
+    cursor: pointer; 
+    font-family: "Zen-Dots", sans-serif;
+    font-size: 0.65rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 185, 21, 0.4);
+}
+
+/* DROP ZONE: Subtle and integrated */
+.drop-zone {
+    border: 2px dashed rgba(255, 185, 21, 0.6);
+    border-radius: 12px;
+    padding: 30px;
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.65rem;
+    opacity: 0.85;
+    cursor: pointer;
+}
+
+/* SYSTEM CONTROLS: Modern floating panel */
+.system-controls {
+    background: rgba(255, 185, 21, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 185, 21, 0.15);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.system-controls h3 {
+    margin: 0 0 8px 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+}
+
+.system-controls label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.system-controls label span {
+    font-weight: bold;
+    color: #FFB915;
+    opacity: 1;
+}
+
+.system-controls input[type="range"] {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.system-controls input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #FFB915;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(255, 185, 21, 0.4);
+}
+
+.system-controls input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #FFB915;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 8px rgba(255, 185, 21, 0.4);
+}
+
+.system-controls textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(255, 185, 21, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    color: #FFB915;
+    font-family: "Zen-Dots", sans-serif;
+    font-size: 0.65rem;
+    resize: vertical;
+    min-height: 70px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.system-controls textarea:focus {
+    border-color: rgba(255, 185, 21, 0.4);
+    background: rgba(255, 185, 21, 0.05);
+    box-shadow: 0 0 12px rgba(255, 185, 21, 0.2);
+}
