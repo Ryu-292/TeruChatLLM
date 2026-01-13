@@ -111,6 +111,24 @@ body {
     color: #6bffaa;
 }
 
+/* Citations */
+.citations {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 185, 21, 0.2);
+    font-size: 0.6rem;
+    opacity: 0.8;
+}
+
+.cite {
+    display: inline-block;
+    background: rgba(255, 185, 21, 0.15);
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-right: 6px;
+    margin-top: 4px;
+}
+
 .composer { 
     display: flex; 
     flex-direction: row;

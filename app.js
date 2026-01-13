@@ -85,19 +85,38 @@ async function init() {
                 // metadata not available; continue
             }
             let text = "";
+            let firstPageText = "";
             for (let i = 1; i <= pdfData.numPages; i++) {
                 const page = await pdfData.getPage(i);
                 const content = await page.getTextContent();
-                text += content.items.map(s => s.str).join(" ") + " ";
+                const pageText = content.items.map(s => s.str).join(" ") + " ";
+                text += pageText;
+                if (i === 1) firstPageText = pageText;
+            }
+
+            // If no author in metadata, try to extract from first page text
+            if (!author && firstPageText) {
+                // Common patterns: "by Author Name", "Author Name\n", author after title
+                const byMatch = firstPageText.match(/(?:by|By|BY)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
+                if (byMatch) author = byMatch[1];
+                else {
+                    // Try to find capitalized names in first 500 chars
+                    const firstPart = firstPageText.substring(0, 500);
+                    const nameMatch = firstPart.match(/\b([A-Z][a-z]+\s+[A-Z]\.?\s+[A-Z][a-z]+)\b/);
+                    if (nameMatch) author = nameMatch[1];
+                }
             }
 
             const pdfHeader = text.substring(0, 1000).replace(/\n/g, ' ');
             const chunks = text.match(/.{1,500}/g) || [];
             const chunkIndices = [];
             
-            for (const chunk of chunks) {
-                const output = await state.extractor(chunk, { pooling: 'mean', normalize: true });
-                state.vectorStore.push({ text: chunk, embedding: Array.from(output.data), source: file.name });
+            // Prepend metadata to first chunk so it's searchable
+            const metaPrefix = author ? `[Metadata] Document: ${file.name}, Author: ${author}\n\n` : `[Metadata] Document: ${file.name}\n\n`;
+            for (let i = 0; i < chunks.length; i++) {
+                const chunkText = (i === 0 ? metaPrefix : '') + chunks[i];
+                const output = await state.extractor(chunkText, { pooling: 'mean', normalize: true });
+                state.vectorStore.push({ text: chunkText, embedding: Array.from(output.data), source: file.name });
                 chunkIndices.push(state.vectorStore.length - 1);
             }
 
@@ -152,7 +171,8 @@ async function init() {
             state.trackedPDFs.forEach(pdf => {
                 const item = document.createElement('div');
                 item.className = 'memory-item pdf-entry';
-                item.innerHTML = `<span>${pdf.filename}</span><span onclick="window.deletePDFHandler('${pdf.filename.replace(/'/g, "\\'")}')" style="cursor:pointer;color:#ff4d4d">×</span>`;
+                const authorInfo = pdf.author ? `<small style="opacity:0.7;display:block;margin-top:4px">by ${pdf.author}</small>` : '';
+                item.innerHTML = `<span>${pdf.filename}${authorInfo}</span><span onclick="window.deletePDFHandler('${pdf.filename.replace(/'/g, "\\'")}')" style="cursor:pointer;color:#ff4d4d">×</span>`;
                 els.memoryList.appendChild(item);
             });
         }
@@ -186,16 +206,38 @@ async function init() {
             appendMsg('You', query, 'user');
             els.chatInput.value = '';
 
-            // If the user asks for the author of a specific PDF, answer directly from metadata when available
-            const filenameMatch = query.match(/[\w\-]+\.pdf/i);
-            if (filenameMatch) {
-                const target = filenameMatch[0].toLowerCase();
-                const pdfMeta = state.trackedPDFs.find(p => p.filename.toLowerCase() === target);
-                if (pdfMeta && pdfMeta.author) {
-                    const direct = `Author of ${pdfMeta.filename}: ${pdfMeta.author}`;
+            // If the user asks for author/metadata, try to answer directly
+            const authorQuery = /author|who wrote|who is the author|who i sthe|uator/i.test(query);
+            if (authorQuery) {
+                const filenameMatch = query.match(/[\w\-]+\.pdf/i);
+                if (filenameMatch) {
+                    const target = filenameMatch[0].toLowerCase();
+                    const pdfMeta = state.trackedPDFs.find(p => p.filename.toLowerCase() === target);
+                    if (pdfMeta) {
+                        const direct = pdfMeta.author ? `The author is ${pdfMeta.author}.` : `Could not determine the author from the PDF. The author may not be clearly identified in the document.`;
+                        appendMsg('Terubot', direct, 'bot');
+                        const activeDisc = state.discussions[state.activeIdx];
+                        activeDisc.history.push({ role: 'user', content: query }, { role: 'assistant', content: direct });
+                        els.status.innerText = "Terubot Ready!";
+                        return;
+                    }
+                } else if (state.trackedPDFs.length === 1) {
+                    // Single PDF uploaded, assume they mean that one
+                    const pdfMeta = state.trackedPDFs[0];
+                    const direct = pdfMeta.author ? `The author is ${pdfMeta.author} (from ${pdfMeta.filename}).` : `Could not determine the author from ${pdfMeta.filename}. The author may not be clearly identified in the document.`;
                     appendMsg('Terubot', direct, 'bot');
                     const activeDisc = state.discussions[state.activeIdx];
                     activeDisc.history.push({ role: 'user', content: query }, { role: 'assistant', content: direct });
+                    els.status.innerText = "Terubot Ready!";
+                    return;
+                } else if (state.trackedPDFs.length > 1) {
+                    // Multiple PDFs, show all authors
+                    const authorList = state.trackedPDFs.map(p => 
+                        `${p.filename}: ${p.author || 'Unknown author'}`
+                    ).join('\n');
+                    appendMsg('Terubot', `Authors:\n${authorList}`, 'bot');
+                    const activeDisc = state.discussions[state.activeIdx];
+                    activeDisc.history.push({ role: 'user', content: query }, { role: 'assistant', content: authorList });
                     els.status.innerText = "Terubot Ready!";
                     return;
                 }
@@ -213,26 +255,23 @@ async function init() {
                 searchResults = state.vectorStore
                     .map(item => ({ ...item, score: cosineSimilarity(qEmb, item.embedding) }))
                     .sort((a,b) => b.score - a.score)
-                    .slice(0, 5);
+                    .slice(0, 10);  // Get more chunks
                 const topScore = searchResults[0]?.score ?? 0;
-                const THRESHOLD = 0.25;
-                if (topScore >= THRESHOLD) {
-                    specificChunks = searchResults.map(r => `[${r.source}] ${r.text}`).join("\n");
-                    usedSources = [...new Set(searchResults.map(r => r.source))];
-                    contextUsed = true;
-                }
+                console.log(`Top similarity score: ${topScore.toFixed(3)}`);
+                // Always use context when PDFs are uploaded
+                specificChunks = searchResults.map(r => `[${r.source}] ${r.text}`).join("\n\n");
+                usedSources = [...new Set(searchResults.map(r => r.source))];
+                contextUsed = true;
             }
 
             const activeDisc = state.discussions[state.activeIdx];
-            const docsList = state.trackedPDFs.map(pdf => `- ${pdf.filename}`).join("\n");
+            const docsList = state.trackedPDFs.map(pdf => `- ${pdf.filename}${pdf.author ? ` (Author: ${pdf.author})` : ''}`).join("\n");
             const systemPrompt = !hasDocs ?
                 `You are a helpful assistant. Answer conversationally and helpfully.` :
-                (contextUsed
-                    ? `You are a helpful assistant. Prioritize the provided CONTEXT from the uploaded documents. Be concise and cite filenames used.`
-                    : `You are a helpful assistant. No strong matches were found in the uploaded documents; answer based on general knowledge. Avoid claiming confidentiality.`);
+                `You are a research assistant. You MUST use the provided CONTEXT from the uploaded documents to answer questions. The CONTEXT contains relevant excerpts from the papers. Answer based ONLY on what's in the CONTEXT. If the answer isn't in the CONTEXT, say "The provided excerpts don't contain that information." Always cite the source filenames.`;
 
             const messages = [
-                { role: "system", content: hasDocs && contextUsed ? `${systemPrompt}\n\nDOCS:\n${docsList}\n\nCONTEXT:\n${specificChunks}` : systemPrompt },
+                { role: "system", content: hasDocs && contextUsed ? `${systemPrompt}\n\nDOCUMENTS UPLOADED:\n${docsList}\n\nRELEVANT CONTEXT:\n${specificChunks}` : systemPrompt },
                 ...activeDisc.history,
                 { role: "user", content: query }
             ];
