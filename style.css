@@ -11,8 +11,8 @@
 body {
     margin: 0;
     padding: 0;
-    /* Mesh gradient using your colors */
-    background: radial-gradient(circle at 10% 20%, rgba(17, 17, 60, 1) 0%, rgba(0, 0, 33, 1) 90%);
+    /* Uniform dark gradient background */
+    background: linear-gradient(135deg, rgba(17, 17, 60, 1) 0%, rgba(0, 0, 33, 1) 100%);
     background-attachment: fixed;
     font-family: "Zen-Dots", sans-serif;
     color: #FFB915;
@@ -20,16 +20,6 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-/* Add a subtle glow behind everything like the reference image */
-body::before {
-    content: "";
-    position: absolute;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(255, 185, 21, 0.05) 0%, transparent 70%);
-    z-index: -1;
 }
 
 .main-wrapper {
@@ -60,6 +50,21 @@ body::before {
     flex-direction: column;
     justify-content: space-between;
     padding: 0 20px;
+    position: relative;
+}
+
+/* TOP BAR: Contains system controls and title */
+.top-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.top-bar .name {
+    margin: 0;
+    white-space: nowrap;
 }
 
 .chat { 
@@ -94,11 +99,23 @@ body::before {
     margin-right: auto;
 }
 
+.msg.lit-review {
+    background: rgba(100, 150, 255, 0.08);
+    border: 1px solid rgba(100, 150, 255, 0.3);
+    color: #6b9fff;
+}
+
+.msg.summary {
+    background: rgba(100, 255, 150, 0.08);
+    border: 1px solid rgba(100, 255, 150, 0.3);
+    color: #6bffaa;
+}
+
 .composer { 
     display: flex; 
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(25px);
     border: 1px solid rgba(255, 185, 21, 0.2);
@@ -130,6 +147,10 @@ body::before {
     border-top: 1px solid rgba(255, 185, 21, 0.05);
 }
 
+send-btn {
+    color:#000021;
+}
+
 button { 
     padding: 8px 16px; 
     border-radius: 12px; 
@@ -151,32 +172,131 @@ button:hover {
     box-shadow: 0 0 20px rgba(255, 185, 21, 0.4);
 }
 
-/* DROP ZONE: Subtle and integrated */
-.drop-zone {
-    border: 2px dashed rgba(255, 185, 21, 0.6);
+/* FILE UPLOAD BUTTON: Document icon button */
+.file-btn {
+    padding: 10px;
     border-radius: 12px;
-    padding: 30px;
-    width: 100%;
-    aspect-ratio: 1;
+    background: rgba(255, 185, 21, 0.15);
+    color: #FFB915;
+    border: 1px solid rgba(255, 185, 21, 0.3);
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    font-size: 0.65rem;
-    opacity: 0.85;
-    cursor: pointer;
+    min-width: 40px;
+    height: 40px;
+    transition: all 0.3s ease;
 }
 
-/* SYSTEM CONTROLS: Modern floating panel */
+.file-btn:hover {
+    background: rgba(255, 185, 21, 0.25);
+    border-color: rgba(255, 185, 21, 0.5);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 185, 21, 0.3);
+}
+
+.file-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ACTION BUTTONS: Literature Review and Quick Summary */
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 10px 20px;
+    border-radius: 12px;
+    background: rgba(255, 185, 21, 0.1);
+    color: #FFB915;
+    border: 1px solid rgba(255, 185, 21, 0.3);
+    cursor: pointer;
+    font-family: "Zen-Dots", sans-serif;
+    font-size: 0.65rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.action-btn:hover {
+    background: rgba(255, 185, 21, 0.2);
+    border-color: rgba(255, 185, 21, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 185, 21, 0.3);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.lit-review-btn {
+    background: rgba(100, 150, 255, 0.1);
+    border-color: rgba(100, 150, 255, 0.3);
+    color: #6b9fff;
+}
+
+.lit-review-btn:hover {
+    background: rgba(100, 150, 255, 0.2);
+    border-color: rgba(100, 150, 255, 0.5);
+    box-shadow: 0 4px 12px rgba(100, 150, 255, 0.3);
+}
+
+.summary-btn {
+    background: rgba(100, 255, 150, 0.1);
+    border-color: rgba(100, 255, 150, 0.3);
+    color: #6bffaa;
+}
+
+.summary-btn:hover {
+    background: rgba(100, 255, 150, 0.2);
+    border-color: rgba(100, 255, 150, 0.5);
+    box-shadow: 0 4px 12px rgba(100, 255, 150, 0.3);
+}
+
+.action-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* DROP ZONE: Hidden (replaced by file button) */
+.drop-zone {
+    display: none;
+}
+
+/* SYSTEM CONTROLS: Horizontal layout at top */
 .system-controls {
     background: rgba(255, 185, 21, 0.05);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 185, 21, 0.15);
     border-radius: 16px;
     padding: 16px;
+    flex: 1;
+    max-width: 700px;
+}
+
+.controls-grid {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.control-item {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .system-controls h3 {
@@ -251,4 +371,108 @@ button:hover {
     border-color: rgba(255, 185, 21, 0.4);
     background: rgba(255, 185, 21, 0.05);
     box-shadow: 0 0 12px rgba(255, 185, 21, 0.2);
+}
+
+/* Remove the rectangle/box styling from the memory bank */
+.memory-bank {
+    background: transparent; /* Fuses with sidebar background */
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+.memory-list {
+    background: transparent;
+    padding: 0;
+}
+
+/* Style the headers to look clean on the flat background */
+.memory-bank h3, 
+.memory-bank h4 {
+    color: #FFB915;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.memory-item {
+    font-size: 14px; /* Change this value to your preferred size */
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Optional: Make the active discussion slightly larger or bolder */
+
+
+.memory-item:hover {
+    background: rgba(255, 255, 255, 0.05); /* Subtle hint on hover */
+}
+
+.memory-item.active {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-left: 3px solid #FFB915; /* Small accent line to show selection */
+}
+
+.new-chat-btn {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 12px;
+    cursor: pointer;
+    
+    /* Design updates */
+    background: rgba(255, 255, 255, 0.05); 
+    color: #FFB915;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.new-chat-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.new-chat-btn:active {
+    transform: scale(0.98); /* Slight click effect */
+}
+
+.pdf-item {
+    background: rgba(100, 150, 255, 0.08);
+    border: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+.stats-item {
+    background: rgba(100, 200, 100, 0.08);
+    border: 1px solid rgba(100, 200, 100, 0.2);
+}
+
+.delete-btn {
+    padding: 2px 6px;
+    background: rgba(255, 100, 100, 0.8);
+    color: #FFB915;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: bold;
+    min-width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.delete-btn:hover {
+    background: rgba(255, 50, 50, 0.95);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(255, 100, 100, 0.5);
 }

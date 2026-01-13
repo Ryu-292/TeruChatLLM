@@ -12,33 +12,76 @@
 <body>
     <div class="main-wrapper">
         <aside class="sidebar">
-            <h3>Files</h3>
-            <div id="drop-zone" class="drop-zone">
-                Drop files here or click to upload
-                <input type="file" id="file-input" hidden multiple>
-            </div>
+            <h1 class="name">Terubot</h1>
             <div id="upload-status" class="upload-status">
                 No uploads in progress.
             </div>
 
-            <div class="system-controls">
-                <h3>System Controls</h3>
-                <label for="temp-slider">Temperature: <span id="temp-val">0.7</span></label>
-                <input type="range" id="temp-slider" min="0" max="1.5" step="0.1" value="0.7">
-                
-                <label for="system-prompt">Agent Role:</label>
-                <textarea id="system-prompt" rows="3">You are an Academic Researcher. Use the provided context to answer the user's question. Cite source filenames.</textarea>
+            <div class="memory-bank">
+                <h3>Memory Bank</h3>
+                <div id="memory-list" class="memory-list"></div>
             </div>
         </aside>
 
         <main class="container">
-            <h1 class="name">Terubot</h1>
+            <div class="top-bar">
+                <div class="system-controls">
+                    <h3>System Controls</h3>
+                    <div class="controls-grid">
+                        <div class="control-item">
+                            <label for="temp-slider">Temperature: <span id="temp-val">0.7</span></label>
+                            <input type="range" id="temp-slider" min="0" max="1.5" step="0.1" value="0.7">
+                        </div>
+                        <div class="control-item">
+                            <label for="system-prompt">Agent Role:</label>
+                            <textarea id="system-prompt" rows="2">You are an Academic Researcher. Use the provided context to answer the user's question. Cite source filenames.</textarea>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+            <!-- Action Buttons Row -->
+            <div class="action-buttons">
+                <button type="button" id="lit-review-btn" class="action-btn lit-review-btn" title="Generate Literature Review">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    Literature Review
+                </button>
+                <button type="button" id="quick-summary-btn" class="action-btn summary-btn" title="Generate Quick Summary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                    Quick Summary
+                </button>
+            </div>
 
             <div id="chat" class="chat" style="flex-grow: 1; overflow-y: auto;"></div>
 
             <form id="chat-form" class="composer">
+                <button type="button" id="file-upload-btn" class="file-btn" title="Upload PDFs">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                </button>
+                <input type="file" id="file-input" hidden multiple accept=".pdf">
                 <input id="msg" type="text" placeholder="Type a message…" autocomplete="off" />
-                <button type="submit">Send</button>
+                <button type="submit" class="send-btn" title="Send Message">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
             </form>
         </main>
     </div>
@@ -49,35 +92,16 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
         window.pdfjsLib = pdfjsLib;
 
-        // Simple logic for the Drag and Drop Visuals
-        const dropZone = document.getElementById('drop-zone');
-        const status = document.getElementById('upload-status');
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                status.innerText = `Uploading ${files.length} file(s)...`;
-                
-                const dataTransfer = new DataTransfer();
-                for (const file of files) { dataTransfer.items.add(file); }
-                document.getElementById('file-input').files = dataTransfer.files;
-                document.getElementById('file-input').dispatchEvent(new Event('change'));
+        // File upload button handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileUploadBtn = document.getElementById('file-upload-btn');
+            const fileInput = document.getElementById('file-input');
+            
+            if (fileUploadBtn && fileInput) {
+                fileUploadBtn.addEventListener('click', () => {
+                    fileInput.click();
+                });
             }
-        });
-
-        dropZone.addEventListener('click', () => {
-            document.getElementById('file-input').click();
         });
     </script>
 </body>
